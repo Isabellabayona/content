@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const fm = require('front-matter');
-
 const walk = function(dir, done) {
   var results = [];
   fs.readdir(dir, function(err, list) {
@@ -24,8 +23,6 @@ const walk = function(dir, done) {
     });
   });
 };
-
-
 const buildLessonsData = (lessons) => lessons
   .filter(lesson => {
     const content = fs.readFileSync(lesson, 'utf8');
@@ -36,15 +33,12 @@ const buildLessonsData = (lessons) => lessons
     const content = fs.readFileSync(lesson, 'utf8');
     const attributes = fm(content).attributes;
     const { title, date, tags, status, subtitle, authors } = attributes;
-    
     if(!title) throw new Error('Missing title on '+lesson);
     if(!date) throw new Error('Missing date on '+title);
     if(!tags) throw new Error('Missing tags'+title);
-    
     const fileName = path.basename(lesson, '.md').split('.')[0];
     const lang = getLanguage(lesson);
     const translations = lessons.filter(l => l.includes(fileName)).map((l) => { return getLanguage(l) }).filter(l => l !== lang);
-    
     const slug = attributes.slug || path.basename(lesson, '.md');
     return {
         slug: slug.substring(slug.indexOf("]")+1), //removing status from file name, e.g: "[unassigned]hello.md" will be "hello.md"
@@ -53,7 +47,6 @@ const buildLessonsData = (lessons) => lessons
         title, date, tags, lang, translations, subtitle,
     };
 });
-
 const getLanguage = (lesson) => {
     const fileName = path.basename(lesson, '.md');
     if ((/.*\.[a-z]{2}/g).test(fileName)) 
@@ -61,18 +54,15 @@ const getLanguage = (lesson) => {
     else
         return "en";
 };
-
 const createContentJSON =(content, fileName) => {
     if (!fs.existsSync("public/static/api")) fs.mkdirSync("public/static/api");
     fs.writeFileSync("public/static/api/"+fileName+".json", JSON.stringify(content));
 };
-
 walk('src/content/lesson/', function(err, results) {
     if (err){
         console.log("Error scanning markdown files");
         process.exit(1);
     } 
-    
     try{
         const lessons = buildLessonsData(results);
         createContentJSON(lessons, "lessons");
